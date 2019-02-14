@@ -51,6 +51,7 @@ int main() {
     map_waypoints_dy.push_back(d_y);
   }
   int lane = 1;  // 0-left lane, 1-center lane, 2-right lane
+  int state = 1;  // 0-left lane, 1-center lane, 2-right lane
   double ref_vel = 0.0; //mph
 
   h.onMessage([&lane,&ref_vel,&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
@@ -73,12 +74,12 @@ int main() {
           // j[1] is the data JSON object
           
           // Main car's localization Data
-          double car_x = j[1]["x"];
-          double car_y = j[1]["y"];
-          double car_s = j[1]["s"];
-          double car_d = j[1]["d"];
-          double car_yaw = j[1]["yaw"];
-          double car_speed = j[1]["speed"];
+          double HV_x = j[1]["x"];
+          double HV_y = j[1]["y"];
+          double HV_s = j[1]["s"];
+          double HV_d = j[1]["d"];
+          double HV_yaw = j[1]["yaw"];
+          double HV_speed = j[1]["speed"];
 
           // Previous path data given to the Planner
           auto previous_path_x = j[1]["previous_path_x"];
@@ -102,41 +103,95 @@ int main() {
 
             if(prev_size > 0)
             {
-              car_s = end_path_s;
+              HV_s = end_path_s;
             }
 
-            bool too_close = false;
-            //find ref_v to use
+            bool RV_in_HV_lane = false;
+            bool RV_in_L0_zone = false;
+            bool RV_in_L1_zone = false;
+            bool RV_in_L2_zone = false;
+            double inlane_ahead_zone = 30.0;
+            double ahead_zone = 60.0;
+            double behind_zone = 50.0;
+            //Go through all RVs
             for(int i = 0; i < sensor_fusion.size(); i++)
             {
-              //car is in my lane
-              float d = sensor_fusion[i][6];
-              if(d < (2+4*lane+2) && d > (2+4*lane-2))
+              float RV_d = sensor_fusion[i][6];
+              double RV_vx = sensor_fusion[i][3];
+              double RV_vy = sensor_fusion[i][4];
+              double RV_speed = sqrt(RV_vx*RV_vx+RV_vy*RV_vy);
+              double RV_s = sensor_fusion[i][5];
+              //if using previous points can project
+              RV_s += ((double)prev_size*0.02*RV_speed);
+              //RV is in my lane
+              if(RV_d < (2+4*lane+2) && RV_d > (2+4*lane-2))
               {
-                double rv_vx = sensor_fusion[i][3];
-                double rv_vy = sensor_fusion[i][4];
-                double check_speed = sqrt(rv_vx*rv_vx+rv_vy*rv_vy);
-                double check_car_s = sensor_fusion[i][5];
-
-                //if using previous points can project
-                check_car_s += ((double)prev_size*0.02*check_speed);
-                //check if the vehicle is infront and with in 30m
-                if((check_car_s > car_s) && ((check_car_s-car_s)<30))
+                //check if the RV is infront and with in inlane_ahead_zone
+                if((RV_s > HV_s) && ((RV_s-HV_s)<inlane_ahead_zone))
                 {
-                  //do some logic here
-                  //ref_vel = 29.5;
-                  too_close=true;
-                  if (lane > 0)
-                  {
-                      lane=0;
-                  }
+                  RV_in_HV_lane=true;
                 }
-
+              }
+              else if(RV_d < (2+4*0+2) && RV_d > (2+4*0-2)) //RV is in L0
+              {
+                //check if the RV is infront and with in inlane_ahead_zone
+                if( ((RV_s >= HV_s) && ((RV_s-HV_s)<ahead_zone)) ||
+                    ((RV_s < HV_s) && ((HV_s-RV_s)<behind_zone)) )
+                {
+                  RV_in_L0_zone=true;
+                }
+              }
+              else if(RV_d < (2+4*1+2) && RV_d > (2+4*1-2)) //RV is in L1
+              {
+                //check if the RV is infront and with in inlane_ahead_zone
+                if( ((RV_s >= HV_s) && ((RV_s-HV_s)<ahead_zone)) ||
+                    ((RV_s < HV_s) && ((HV_s-RV_s)<behind_zone)) )
+                {
+                  RV_in_L1_zone=true;
+                }
+              }
+              else if(RV_d < (2+4*2+2) && RV_d > (2+4*2-2)) //RV is in L2
+              {
+                //check if the RV is infront and with in inlane_ahead_zone
+                if( ((RV_s >= HV_s) && ((RV_s-HV_s)<ahead_zone)) ||
+                    ((RV_s < HV_s) && ((HV_s-RV_s)<behind_zone)) )
+                {
+                  RV_in_L2_zone=true;
+                }
               }
             }
-            if(too_close)
+          /* Finite State Machine */
+            switch(state)
             {
+              case 0:
+                lane = 0;
+                if(RV_in_HV_lane && (RV_in_L1_zone == false))
+                {
+                  state = 1;
+                }
+                break;
+              case 1:
+                lane = 1;
+                if(RV_in_HV_lane && (RV_in_L0_zone == false))
+                {
+                  state = 0;
+                }
+                else if(RV_in_HV_lane && (RV_in_L2_zone == false))
+                {
+                  state = 2;
+                }
+                break;
+              case 2:
+                lane = 2;
+                if(RV_in_HV_lane && (RV_in_L1_zone == false))
+                {
+                  state = 1;
+                }
+                break;
+            }
 
+            if(RV_in_HV_lane)
+            {
                 ref_vel -= 0.224;
             }
             else if(ref_vel < 49.0)
@@ -149,20 +204,20 @@ int main() {
             vector<double> ptsy;
 
             //reference x,y yaw rate
-            double ref_x = car_x; 
-            double ref_y = car_y; 
-            double ref_yaw = deg2rad(car_yaw); 
+            double ref_x = HV_x; 
+            double ref_y = HV_y; 
+            double ref_yaw = deg2rad(HV_yaw); 
 
             if (prev_size < 2)
             {
-              double prev_car_x = car_x - cos(car_yaw);
-              double prev_car_y = car_y - sin(car_yaw);
+              double prev_HV_x = HV_x - cos(HV_yaw);
+              double prev_HV_y = HV_y - sin(HV_yaw);
 
-              ptsx.push_back(prev_car_x);
-              ptsx.push_back(car_x);
+              ptsx.push_back(prev_HV_x);
+              ptsx.push_back(HV_x);
 
-              ptsy.push_back(prev_car_y);
-              ptsy.push_back(car_y);
+              ptsy.push_back(prev_HV_y);
+              ptsy.push_back(HV_y);
             }
             else
             {
@@ -181,9 +236,9 @@ int main() {
 
             }
 
-            vector<double> next_wp0 = getXY(car_s + 30,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
-            vector<double> next_wp1 = getXY(car_s + 60,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
-            vector<double> next_wp2 = getXY(car_s + 90,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
+            vector<double> next_wp0 = getXY(HV_s + 30,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
+            vector<double> next_wp1 = getXY(HV_s + 60,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
+            vector<double> next_wp2 = getXY(HV_s + 90,(2+4*lane),map_waypoints_s,map_waypoints_x,map_waypoints_y);
 
             ptsx.push_back(next_wp0[0]);
             ptsx.push_back(next_wp1[0]);
@@ -256,7 +311,7 @@ int main() {
             //double dist_inc = 0.3;
             //for (int i = 0; i < 50; ++i) 
             //{
-            //    double next_s = car_s + dist_inc*(i+1);
+            //    double next_s = HV_s + dist_inc*(i+1);
             //    double next_d = 6;
             //    vector<double> XY = getXY(next_s, next_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
             //
