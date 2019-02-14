@@ -52,10 +52,10 @@ int main() {
   }
   int lane = 1;  // 0-left lane, 1-center lane, 2-right lane
   enum States { L0, L1, L2, L0_L1, L1_L0, L2_L1, L1_L2};
-  States state = 1;  // 0-left lane, 1-center lane, 2-right lane
+  States state = L1;  // 0-left lane, 1-center lane, 2-right lane
   double ref_vel = 0.0; //mph
   long int time_step=0;
-  std::out << "time_step,RV_id,RV_s,RV_d,HV_s,HV_d,RV_in_HV_lane,RV_in_L0_zone,RV_in_L1_zone,RV_in_L2_zone,lane,state" << std::endl;
+  std::cout << "time_step,RV_id,RV_s,RV_d,RV_speed,HV_s,HV_d,HV_speed,ref_vel,RV_in_HV_lane,RV_in_L0_zone,RV_in_L1_zone,RV_in_L2_zone,lane,state" << std::endl;
 
   h.onMessage([&time_step,&state, &lane,&ref_vel,&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
                &map_waypoints_dx,&map_waypoints_dy]
@@ -168,7 +168,9 @@ int main() {
                 }
               }
               //std::cout << RV_id << " " << RV_s << " " << RV_d << " zones:" << RV_in_L0_zone << " " << RV_in_L1_zone << " " <<RV_in_L2_zone << std::endl;
-              std::out << time_step << "," << RV_id << "," << RV_s << "," << RV_d << "," << HV_s << "," << HV_d << "," << RV_in_HV_lane << "," << RV_in_L0_zone << "," << RV_in_L1_zone << "," << RV_in_L2_zone << "," << lane << "," << state  << std::endl;
+              // std::cout << "time_step,RV_id,RV_s,RV_d,RV_speed,HV_s,HV_d,HV_speed,ref_vel,RV_in_HV_lane,RV_in_L0_zone,RV_in_L1_zone,RV_in_L2_zone,lane,state" << std::endl;
+
+              std::cout << time_step << "," << RV_id << "," << RV_s << "," << RV_d << "," << RV_speed << "," << HV_s << "," << HV_d << "," << HV_speed << " " << ref_vel << "," << RV_in_HV_lane << "," << RV_in_L0_zone << "," << RV_in_L1_zone << "," << RV_in_L2_zone << "," << lane << "," << state  << std::endl;
             }
             //std::cout << "****** state:" << state << HV_s << " " << HV_d << " *******"<<std::endl;
           /* Finite State Machine */
