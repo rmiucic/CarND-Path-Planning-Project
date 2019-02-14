@@ -114,8 +114,8 @@ int main() {
             bool RV_in_L1_zone = false;
             bool RV_in_L2_zone = false;
             double inlane_ahead_zone = 30.0;
-            double ahead_zone = 60.0;
-            double behind_zone = 50.0;
+            double ahead_zone = 35.0;
+            double behind_zone = 10.0;
             double center_offset = 0.3; 
             time_step++;
             //Go through all RVs
@@ -140,7 +140,8 @@ int main() {
                   RV_in_HV_lane=true;
                 }
               }
-              else if(RV_d < (2+4*0+2) && RV_d > (2+4*0-2)) //RV is in L0
+              
+              if(RV_d < (2+4*0+2) && RV_d > (2+4*0-2)) //RV is in L0
               {
                 //check if the RV is infront and with in inlane_ahead_zone
                 if( ((RV_s >= HV_s) && ((RV_s-HV_s)<ahead_zone)) ||
@@ -303,10 +304,6 @@ int main() {
             //sreate a spline
             tk::spline s;
 
-            //for (int j=0; j<ptsx.size(); j++)
-            //{
-            //    cout << 
-            //}
             //set points of the spline
             s.set_points(ptsx,ptsy);
 
