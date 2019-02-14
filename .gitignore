@@ -8,4 +8,5 @@ src/compile_commands.json
 src/nbproject/
 src/path_planning
 build/
+src/.vscode/
 

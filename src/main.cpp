@@ -54,7 +54,7 @@ int main() {
   int state = 1;  // 0-left lane, 1-center lane, 2-right lane
   double ref_vel = 0.0; //mph
 
-  h.onMessage([&lane,&ref_vel,&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
+  h.onMessage([&state, &lane,&ref_vel,&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
                &map_waypoints_dx,&map_waypoints_dy]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                uWS::OpCode opCode) {
@@ -114,13 +114,16 @@ int main() {
             double ahead_zone = 60.0;
             double behind_zone = 50.0;
             //Go through all RVs
-            for(int i = 0; i < sensor_fusion.size(); i++)
+            int ix;
+            for(ix = 0; ix < sensor_fusion.size(); ix++)
             {
-              float RV_d = sensor_fusion[i][6];
-              double RV_vx = sensor_fusion[i][3];
-              double RV_vy = sensor_fusion[i][4];
+              float RV_d = sensor_fusion[ix][6];
+              double RV_vx = sensor_fusion[ix][3];
+              double RV_vy = sensor_fusion[ix][4];
               double RV_speed = sqrt(RV_vx*RV_vx+RV_vy*RV_vy);
-              double RV_s = sensor_fusion[i][5];
+              double RV_s = sensor_fusion[ix][5];
+              double RV_id = sensor_fusion[ix][0];
+              
               //if using previous points can project
               RV_s += ((double)prev_size*0.02*RV_speed);
               //RV is in my lane
@@ -159,7 +162,9 @@ int main() {
                   RV_in_L2_zone=true;
                 }
               }
+              std::cout << RV_id << " " << RV_s << " " << RV_d << " zones:" << RV_in_L0_zone << " " << RV_in_L1_zone << " " <<RV_in_L2_zone << std::endl;
             }
+            std::cout << "****** state:" << state << HV_s << " " << HV_d << " *******"<<std::endl;
           /* Finite State Machine */
             switch(state)
             {
@@ -189,7 +194,10 @@ int main() {
                 }
                 break;
             }
-
+            
+            
+            //std::cout << state << std::endl;
+            
             if(RV_in_HV_lane)
             {
                 ref_vel -= 0.224;
