@@ -51,10 +51,13 @@ int main() {
     map_waypoints_dy.push_back(d_y);
   }
   int lane = 1;  // 0-left lane, 1-center lane, 2-right lane
-  int state = 1;  // 0-left lane, 1-center lane, 2-right lane
+  enum States { L0, L1, L2, L0_L1, L1_L0, L2_L1, L1_L2};
+  States state = 1;  // 0-left lane, 1-center lane, 2-right lane
   double ref_vel = 0.0; //mph
+  long int time_step=0;
+  std::out << "time_step,RV_id,RV_s,RV_d,HV_s,HV_d,RV_in_HV_lane,RV_in_L0_zone,RV_in_L1_zone,RV_in_L2_zone,lane,state" << std::endl;
 
-  h.onMessage([&state, &lane,&ref_vel,&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
+  h.onMessage([&time_step,&state, &lane,&ref_vel,&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
                &map_waypoints_dx,&map_waypoints_dy]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                uWS::OpCode opCode) {
@@ -113,6 +116,8 @@ int main() {
             double inlane_ahead_zone = 30.0;
             double ahead_zone = 60.0;
             double behind_zone = 50.0;
+            double center_offset = 0.3; 
+            time_step++;
             //Go through all RVs
             int ix;
             for(ix = 0; ix < sensor_fusion.size(); ix++)
@@ -162,35 +167,64 @@ int main() {
                   RV_in_L2_zone=true;
                 }
               }
-              std::cout << RV_id << " " << RV_s << " " << RV_d << " zones:" << RV_in_L0_zone << " " << RV_in_L1_zone << " " <<RV_in_L2_zone << std::endl;
+              //std::cout << RV_id << " " << RV_s << " " << RV_d << " zones:" << RV_in_L0_zone << " " << RV_in_L1_zone << " " <<RV_in_L2_zone << std::endl;
+              std::out << time_step << "," << RV_id << "," << RV_s << "," << RV_d << "," << HV_s << "," << HV_d << "," << RV_in_HV_lane << "," << RV_in_L0_zone << "," << RV_in_L1_zone << "," << RV_in_L2_zone << "," << lane << "," << state  << std::endl;
             }
-            std::cout << "****** state:" << state << HV_s << " " << HV_d << " *******"<<std::endl;
+            //std::cout << "****** state:" << state << HV_s << " " << HV_d << " *******"<<std::endl;
           /* Finite State Machine */
             switch(state)
             {
-              case 0:
+              case L0:
                 lane = 0;
                 if(RV_in_HV_lane && (RV_in_L1_zone == false))
                 {
-                  state = 1;
+                  state = L0_L1;
+                  lane = 1;
                 }
                 break;
-              case 1:
+              case L0_L1:
+                if(HV_d < (2+4*1+center_offset) && HV_d > (2+4*1-center_offset))
+                {
+                  state = L1;
+                }
+                break;
+              case L1_L0:
+                if(HV_d < (2+4*0+center_offset) && HV_d > (2+4*0-center_offset))
+                {
+                  state = L0;
+                }
+                break;
+              case L1:
                 lane = 1;
                 if(RV_in_HV_lane && (RV_in_L0_zone == false))
                 {
-                  state = 0;
+                  state = L1_L0;
+                  lane = 0;
                 }
                 else if(RV_in_HV_lane && (RV_in_L2_zone == false))
                 {
-                  state = 2;
+                  state = L1_L2;
+                  lane = 2;
                 }
                 break;
-              case 2:
+              case L1_L2:
+                if(HV_d < (2+4*2+center_offset) && HV_d > (2+4*2-center_offset))
+                {
+                  state = L2;
+                }
+                break;
+              case L2_L1:
+                if(HV_d < (2+4*1+center_offset) && HV_d > (2+4*1-center_offset))
+                {
+                  state = L1;
+                }
+                break;
+              case L2:
                 lane = 2;
                 if(RV_in_HV_lane && (RV_in_L1_zone == false))
                 {
-                  state = 1;
+                  state = L2_L1;
+                  lane = 1;
                 }
                 break;
             }
