@@ -170,7 +170,7 @@ int main() {
               //std::cout << RV_id << " " << RV_s << " " << RV_d << " zones:" << RV_in_L0_zone << " " << RV_in_L1_zone << " " <<RV_in_L2_zone << std::endl;
               // std::cout << "time_step,RV_id,RV_s,RV_d,RV_speed,HV_s,HV_d,HV_speed,ref_vel,RV_in_HV_lane,RV_in_L0_zone,RV_in_L1_zone,RV_in_L2_zone,lane,state" << std::endl;
 
-              std::cout << time_step << "," << RV_id << "," << RV_s << "," << RV_d << "," << RV_speed << "," << HV_s << "," << HV_d << "," << HV_speed << " " << ref_vel << "," << RV_in_HV_lane << "," << RV_in_L0_zone << "," << RV_in_L1_zone << "," << RV_in_L2_zone << "," << lane << "," << state  << std::endl;
+              std::cout << time_step << "," << RV_id << "," << RV_s << "," << RV_d << "," << RV_speed << "," << HV_s << "," << HV_d << "," << HV_speed << "," << ref_vel << "," << RV_in_HV_lane << "," << RV_in_L0_zone << "," << RV_in_L1_zone << "," << RV_in_L2_zone << "," << lane << "," << state  << std::endl;
             }
             //std::cout << "****** state:" << state << HV_s << " " << HV_d << " *******"<<std::endl;
           /* Finite State Machine */
