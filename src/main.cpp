@@ -266,7 +266,7 @@ int main() {
 
               double ref_x_prev = previous_path_x[prev_size-2];
               double ref_y_prev = previous_path_y[prev_size-2];
-              ref_yaw = atan2(ref_y-ref_y_prev, ref_x);
+              ref_yaw = atan2(ref_y-ref_y_prev, ref_x-ref_x_prev);
 
               ptsx.push_back(ref_x_prev);
               ptsx.push_back(ref_x);
@@ -349,7 +349,7 @@ int main() {
               next_y_vals.push_back(y_point);
             }
 
-            for(ix = 0; ix < sensor_fusion.size(); ix++)
+            /*for(ix = 0; ix < sensor_fusion.size(); ix++)
             {
               float RV_d = sensor_fusion[ix][6];
               double RV_vx = sensor_fusion[ix][3];
@@ -358,7 +358,7 @@ int main() {
               double RV_s = sensor_fusion[ix][5];
               double RV_id = sensor_fusion[ix][0];
               std::cout << time_step << "," << RV_id << "," << RV_s << "," << RV_d << "," << RV_speed << "," << HV_s << "," << HV_d << "," << HV_x << "," << HV_y << "," << HV_yaw << "," << HV_speed << "," << ref_vel << "," << RV_in_HV_lane << "," << RV_in_L0_zone << "," << RV_in_L1_zone << "," << RV_in_L2_zone << "," << lane << "," << state  << "," << prev_size <<std::endl;
-            }
+            }*/
 
           /*initial simple lane following */
             //double dist_inc = 0.3;
