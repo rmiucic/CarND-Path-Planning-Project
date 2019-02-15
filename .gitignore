@@ -10,5 +10,5 @@ src/path_planning
 build/
 src/.vscode/
 *.~vsdx
-src/*.csv
+
 

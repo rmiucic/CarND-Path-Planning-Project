@@ -55,7 +55,7 @@ int main() {
   States state = L1;  // 0-left lane, 1-center lane, 2-right lane
   double ref_vel = 0.0; //mph
   long int time_step=0;
-  std::cout << "time_step,RV_id,RV_s,RV_d,RV_speed,HV_s,HV_d,HV_speed,ref_vel,RV_in_HV_lane,RV_in_L0_zone,RV_in_L1_zone,RV_in_L2_zone,lane,state" << std::endl;
+  std::cout << "time_step,RV_id,RV_s,RV_d,RV_speed,HV_s,HV_d,HV_x,HV_y,HV_yaw,HV_speed,ref_vel,RV_in_HV_lane,RV_in_L0_zone,RV_in_L1_zone,RV_in_L2_zone,lane,state,previous_path_x_size" << std::endl;
 
   h.onMessage([&time_step,&state, &lane,&ref_vel,&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
                &map_waypoints_dx,&map_waypoints_dy]
@@ -168,12 +168,7 @@ int main() {
                   RV_in_L2_zone=true;
                 }
               }
-              //std::cout << RV_id << " " << RV_s << " " << RV_d << " zones:" << RV_in_L0_zone << " " << RV_in_L1_zone << " " <<RV_in_L2_zone << std::endl;
-              // std::cout << "time_step,RV_id,RV_s,RV_d,RV_speed,HV_s,HV_d,HV_speed,ref_vel,RV_in_HV_lane,RV_in_L0_zone,RV_in_L1_zone,RV_in_L2_zone,lane,state" << std::endl;
-
-              std::cout << time_step << "," << RV_id << "," << RV_s << "," << RV_d << "," << RV_speed << "," << HV_s << "," << HV_d << "," << HV_speed << "," << ref_vel << "," << RV_in_HV_lane << "," << RV_in_L0_zone << "," << RV_in_L1_zone << "," << RV_in_L2_zone << "," << lane << "," << state  << std::endl;
             }
-            //std::cout << "****** state:" << state << HV_s << " " << HV_d << " *******"<<std::endl;
           /* Finite State Machine */
             switch(state)
             {
@@ -304,6 +299,13 @@ int main() {
             //sreate a spline
             tk::spline s;
 
+            /*for(int i = 0; i < ptsx.size(); i++)
+            { 
+              std::cout << ptsx[i] << "," << ptsy[i]<< "," ;
+            }
+            std::cout << std::endl;
+            */
+            
             //set points of the spline
             s.set_points(ptsx,ptsy);
 
@@ -325,7 +327,7 @@ int main() {
             double x_add_on = 0;
 
             //fill up the rest of the path planer
-            for (int i = 1; i<= 50 - previous_path_x.size(); i++)
+            for (int i = 1; i<= 50 - prev_size; i++)
             {
               double N =(target_dist/(.02*ref_vel/2.24));
               double x_point = x_add_on + (target_x)/N;
@@ -347,6 +349,16 @@ int main() {
               next_y_vals.push_back(y_point);
             }
 
+            for(ix = 0; ix < sensor_fusion.size(); ix++)
+            {
+              float RV_d = sensor_fusion[ix][6];
+              double RV_vx = sensor_fusion[ix][3];
+              double RV_vy = sensor_fusion[ix][4];
+              double RV_speed = sqrt(RV_vx*RV_vx+RV_vy*RV_vy);
+              double RV_s = sensor_fusion[ix][5];
+              double RV_id = sensor_fusion[ix][0];
+              std::cout << time_step << "," << RV_id << "," << RV_s << "," << RV_d << "," << RV_speed << "," << HV_s << "," << HV_d << "," << HV_x << "," << HV_y << "," << HV_yaw << "," << HV_speed << "," << ref_vel << "," << RV_in_HV_lane << "," << RV_in_L0_zone << "," << RV_in_L1_zone << "," << RV_in_L2_zone << "," << lane << "," << state  << "," << prev_size <<std::endl;
+            }
 
           /*initial simple lane following */
             //double dist_inc = 0.3;
