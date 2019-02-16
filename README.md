@@ -11,8 +11,8 @@
 [image9]: ./examples/learning.png "Learning"
 
 
-Self-Driving Car Engineer Nanodegree Program
-![alt text][sim]
+Self-Driving Car Engineer Nanodegree Program<br/>
+![alt text][sim]<br/>
 ## Basic Build Instructions
 1. Clone this repo.
 2. go to src directory: `cd CarND-Path-Planning-Project/src`
@@ -45,18 +45,18 @@ See picture at the top
 2. Trajectory generation was done by building a spline (code from https://kluge.in-chemnitz.de/opensource/spline/)
 the spline consisted of 5 points. In Fenet coordinates points are: previos_previous, previous, 30m ahead, 60m ahead, and 90m ahead. The trajectory was interpolated from the spline between 0 and 30 meters. Number of interpolated points depends on the taget speed `ref_vel` (which is ~49.5MPH if there are no RVs in front or lower value if there are RV in front). 
 
-3. On to of wich I added a first version of Finite State Machine (FSM1) for lane change logic. FSM1 had 3 states: Lane 1, Lane 2, and Lane 3, coresponding to the lanes of the road. 
-![alt text][fsm1]
-Basically this logic was trying to keep the HV in lane if there is no RV in front in the same lane for some distance  `inlane_ahead_zone` (set at 30.0m) or there are RVs in front lane and in avaliable adjacent lanes. RV is considered to be in adjacent lane if it is within `ahead_zone` (set at 35.0m) or `behind_zone` (set at 10.0m). The picture below shows variable involved in calculation.
-![alt text][lane]
-4. I quickly realized that only 3 states was not sufficient because the vehicle would not complete lane change fully before going back and forth between the lanes . Therefore I have introduce transitional states (L0_L1, L1_L0, L1_L2, L2_L1) in second version of Finite State Machine (FSM2).
- ![alt text][fsm2]
-5. A sucessfull lane change in FSM2 means that the vehicle lateral offset is very close to lane center `lane_center-center_offset < HV_d < lane_center+center_offset`.
-![alt text][complete]
+3. On to of wich I added a first version of Finite State Machine (FSM1) for lane change logic. FSM1 had 3 states: Lane 1, Lane 2, and Lane 3, coresponding to the lanes of the road. <br/>
+![alt text][fsm1]<br/>
+Basically this logic was trying to keep the HV in lane if there is no RV in front in the same lane for some distance  `inlane_ahead_zone` (set at 30.0m) or there are RVs in front lane and in avaliable adjacent lanes. RV is considered to be in adjacent lane if it is within `ahead_zone` (set at 35.0m) or `behind_zone` (set at 10.0m). The picture below shows variable involved in calculation.<br/>
+![alt text][lane]<br/>
+4. I quickly realized that only 3 states was not sufficient because the vehicle would not complete lane change fully before going back and forth between the lanes . Therefore I have introduce transitional states (L0_L1, L1_L0, L1_L2, L2_L1) in second version of Finite State Machine (FSM2).<br/>
+ ![alt text][fsm2]<br/>
+5. A sucessfull lane change in FSM2 means that the vehicle lateral offset is very close to lane center `lane_center-center_offset < HV_d < lane_center+center_offset`.<br/>
+![alt text][complete]<br/>
 
 #### The map of the highway is in data/highway_map.txt
-Each waypoint in the list contains  [x,y,s,dx,dy] values. x and y are the waypoint's map coordinate position, the s value is the distance along the road to get to that waypoint in meters, the dx and dy values define the unit normal vector pointing outward of the highway loop.
-![alt text][map]
+Each waypoint in the list contains  [x,y,s,dx,dy] values. x and y are the waypoint's map coordinate position, the s value is the distance along the road to get to that waypoint in meters, the dx and dy values define the unit normal vector pointing outward of the highway loop.<br/>
+![alt text][map]<br/>
 The highway's waypoints loop around so the frenet s value, distance along the road, goes from 0 to 6945.554.
 
 
